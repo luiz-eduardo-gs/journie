@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: journie/php
+    container_name: journie_app
+    tty: true
+    environment:
+      - SERVICE_NAME=journie_app
+      - SERVICE_TAGS=dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - journie-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: journie_nginx
+    tty: true
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - journie-network
+
+  db:
+    image: mysql:5.7.22
+    container_name: journie_mysql
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=journie
+      - MYSQL_ROOT_PASSWORD=2X&tJGwY
+      - SERVICE_TAGS=dev
+      - SERVICE_NAME=mysql
+    volumes:
+      - journie-data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - journie-network
+
+volumes:
+  journie-data:
+    driver: local
+
+networks:
+  journie-network:
+    driver: bridge
